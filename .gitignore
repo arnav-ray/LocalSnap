@@ -1,0 +1,23 @@
+# Photo library — contains personal photos, GPS data, face embeddings. NEVER commit.
+Library/
+
+# ONNX model binaries — downloaded once via download_models.py, not versioned
+models/
+
+# Generated gallery index — rebuilt by build_gallery.py from the library
+gallery_data.js
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Environment / secrets
+.env
+.env.*
+*.key
+*.pem
