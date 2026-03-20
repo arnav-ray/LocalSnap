@@ -24,8 +24,11 @@ def read_sidecar(photo_path: str) -> dict | None:
     if not os.path.exists(sidecar_path):
         return None
 
-    with open(sidecar_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(sidecar_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return None
 
 
 def extract_date_taken(meta: dict) -> datetime | None:
@@ -50,6 +53,9 @@ def extract_gps(meta: dict) -> tuple[float, float] | None:
     lng = geo.get("longitude", 0.0)
     # Coordinates of (0, 0) mean no GPS data was recorded
     if lat == 0.0 and lng == 0.0:
+        return None
+    # Reject out-of-range coordinates — prevents bad data from poisoning the map view
+    if not (-90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0):
         return None
     return (lat, lng)
 
