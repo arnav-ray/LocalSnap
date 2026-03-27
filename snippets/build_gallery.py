@@ -25,9 +25,9 @@ def build_gallery_index(library_path: str, output_path: str) -> None:
     if not library.is_dir():
         raise ValueError(f"library_path must be an existing directory")
 
-    output = Path(output_path).resolve()
+    output_file = Path(output_path).resolve()
     # Prevent writing outside the library's parent (e.g. via ../../../etc/passwd)
-    if output.suffix != ".js":
+    if output_file.suffix != ".js":
         raise ValueError("output_path must point to a .js file")
     photos: list[dict[str, Any]] = []
 
@@ -53,7 +53,7 @@ def build_gallery_index(library_path: str, output_path: str) -> None:
         "collections": collections,
     }
 
-    with open(output, "w", encoding="utf-8") as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write("const galleryData = ")
         json.dump(output, f, separators=(",", ":"))
         f.write(";")
@@ -65,8 +65,11 @@ def _read_sidecar(photo_file: Path) -> dict:
     """Read the JSON sidecar that accompanies the photo, if it exists."""
     sidecar = photo_file.parent / (photo_file.name + ".supplemental-metadata.json")
     if sidecar.exists():
-        with open(sidecar, encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(sidecar, encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            return {}
     return {}
 
 
