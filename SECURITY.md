@@ -138,15 +138,23 @@ FileVault, Linux LUKS, VeraCrypt).
 
 ## Audit Log
 
-| Date | Auditor | Finding | Resolution |
-|------|---------|---------|------------|
-| 2026-03-20 | Claude (claude-sonnet-4-6) | Sidecar filename mismatch — `.supplem.json` vs `.supplemental-metadata.json` | Fixed in `snippets/build_gallery.py:56` |
-| 2026-03-20 | Claude (claude-sonnet-4-6) | Non-recursive library scan — `iterdir()` misses nested dirs | Fixed: replaced with `rglob("*")` |
-| 2026-03-20 | Claude (claude-sonnet-4-6) | No path validation on `library_path`/`output_path` | Fixed: added `resolve()` + type checks |
-| 2026-03-20 | Claude (claude-sonnet-4-6) | Unreachable video type check — `.mp4`/`.mov` filtered before type branch | Fixed: added video extensions to allow-list |
-| 2026-03-20 | Claude (claude-sonnet-4-6) | `json.load()` without error handling in metadata_recovery.py | Fixed: wrapped in `try/except` |
-| 2026-03-20 | Claude (claude-sonnet-4-6) | GPS coordinates not range-validated | Fixed: added bounds check |
-| 2026-03-20 | Claude (claude-sonnet-4-6) | Missing `.gitignore` — `Library/` and `models/` could be committed | Fixed: created `.gitignore` |
-| 2026-03-20 | Claude (claude-sonnet-4-6) | No CORS/security-header/input-validation guidance for server.py | Fixed: documented in this file |
+| Date | Auditor | Finding | Severity | Resolution |
+|------|---------|---------|----------|------------|
+| 2026-03-27 | Claude (claude-sonnet-4-6) | Sidecar filename mismatch — `.supplem.json` vs `.supplemental-metadata.json` — GPS, timestamps, person names silently dropped | CRITICAL | Fixed in `snippets/build_gallery.py:56` |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | Non-recursive library scan — `iterdir()` misses all photos in nested Google Takeout subdirs | CRITICAL | Fixed: replaced with `rglob("*")` + `is_file()` guard |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | No path validation on `library_path`/`output_path` — directory traversal risk if called from web endpoint | CRITICAL | Fixed: added `resolve()` + `.is_dir()` check; output restricted to `.js` suffix |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | Missing `.gitignore` — `Library/` and `models/` could be accidentally committed, leaking PII | CRITICAL | Fixed: created `.gitignore` |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | Unreachable video type check — `.mp4`/`.mov` filtered before type branch, dead code | MEDIUM | Fixed: added video extensions to ingest allow-list |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | `json.load()` without error handling in `metadata_recovery.py` | MEDIUM | Fixed: wrapped in `try/except (JSONDecodeError, OSError)` |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | `json.load()` without error handling in `build_gallery.py:_read_sidecar` | MEDIUM | Fixed: wrapped in `try/except (JSONDecodeError, OSError)` |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | GPS coordinates not range-validated — invalid values (e.g. 999°) reach map view | MEDIUM | Fixed: added `abs(lat) <= 90 and abs(lng) <= 180` guard |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | `output` variable collision in `build_gallery_index()` — `Path` object overwritten by `dict`, `open(output)` would fail at runtime | MEDIUM | Fixed: renamed path variable to `output_file` |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | `metadata_recovery.py` `__main__` demo block prints GPS coordinates and timestamps to stdout | LOW | Accepted risk — snippet/demo code only; do not replicate pattern in production |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | No CORS/security-header/input-validation guidance for server.py | LOW | Documented in this file (see checklist above) |
+| 2026-03-27 | Claude (claude-sonnet-4-6) | No Apache 2.0 license file present | GOVERNANCE | Fixed: created `LICENSE` file |
 
 **Privacy compliance verdict: PASS** — no external data transmission found in any code path.
+
+**Secrets scan: PASS** — no hardcoded credentials, API keys, or tokens found.
+
+**Dependency scan: PASS** — no cloud SDKs (boto3, google-cloud-*, azure-*) or outbound-network packages present.
